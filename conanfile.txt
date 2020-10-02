@@ -1,11 +1,11 @@
 [requires]
 glfw/3.3.2
-glad/0.1.33
-glm/0.9.9.8
+angle/20201001@xid/stable
 
 [generators]
 cmake
 
 [options]
-glad:gl_profile=core
-glad:gles2_version=2.0
+
+[imports]
+lib, *.dylib* -> ./bin # Copies all dylib files from packages lib folder to my local "bin" folder

@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.17)
 project(cardgame)
-
 set(CMAKE_CXX_STANDARD 17)
 
 ### Setup for cmake-conan
@@ -23,6 +22,14 @@ add_executable(cardgame
         main.cpp)
 
 target_link_libraries(cardgame
-        PRIVATE
-        CONAN_PKG::glfw
-        CONAN_PKG::glad)
+        PRIVATE CONAN_PKG::angle CONAN_PKG::glfw)
+
+target_include_directories(cardgame
+        PRIVATE ${CONAN_INCLUDE_DIRS})
+
+# TODO: use cmake options instead of using raw flags
+# TODO: non-apple
+if (APPLE)
+    target_link_options(cardgame
+            PRIVATE "-Wl,-rpath,@executable_path")
+endif()
