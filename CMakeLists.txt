@@ -18,6 +18,17 @@ conan_cmake_run(
 
 ### Targets
 
+add_library(CardGameRenderer
+        SHARED
+        CardGameRenderer.cpp
+        CardGameRenderer.h)
+
+target_link_libraries(CardGameRenderer
+        PRIVATE CONAN_PKG::angle)
+
+target_include_directories(CardGameRenderer
+        PRIVATE ${CONAN_INCLUDE_DIRS})
+
 add_executable(cardgame
         main.cpp)
 
