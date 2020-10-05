@@ -4,10 +4,15 @@
 
 #ifndef CARDGAME_CARDGAMERENDERER_H
 #define CARDGAME_CARDGAMERENDERER_H
-#include <EGL/egl.h>
+
+#if PP_MACOS
 #include <GLES2/gl2.h>
+#elif PP_IOS
+#import <OpenGLES/ES2/gl.h>
+#endif
+
 namespace CardGameRenderer {
-    void triangle(EGLNativeWindowType nativeWindow, GLsizei width, GLsizei height);
+    void triangle(GLsizei width, GLsizei height);
 };
 
 #endif //CARDGAME_CARDGAMERENDERER_H

@@ -3,9 +3,14 @@
 //
 
 #include "CardGameRenderer.h"
-#include <GLES2/gl2.h>
-#include <EGL/egl.h>
 #include <iostream>
+
+#if PP_MACOS
+#include <GLES2/gl2.h>
+#elif PP_IOS
+#import <OpenGLES/ES2/gl.h>
+#endif
+
 
 namespace CardGameRenderer {
 
@@ -18,7 +23,7 @@ namespace CardGameRenderer {
     const GLchar fragmentShaderSource[] =
             "precision mediump float;\n"
             "void main() {\n"
-            "   gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);\n"
+            "   gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n"
             "}\n";
 
     GLuint getShader(GLenum type, const GLchar *shaderSource) {
@@ -52,86 +57,7 @@ namespace CardGameRenderer {
         return program;
     }
 
-    void triangle(EGLNativeWindowType nativeWindow, GLsizei width, GLsizei height) {
-        // **********************
-        // *** Initialize ***
-        // **********************
-        EGLint majorVersion;
-        EGLint minorVersion;
-        EGLDisplay display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-        if (display == EGL_NO_DISPLAY) {
-            std::cout << "no display";
-            return;
-        }
-        if (!eglInitialize(display, &majorVersion, &minorVersion)) {
-            std::cout << "can't initialize";
-            return;
-        }
-
-
-
-        // **********************
-        // *** Choose config ***
-        // **********************
-        EGLint configAttribList[] = {
-                EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-                EGL_RED_SIZE, 5,
-                EGL_GREEN_SIZE, 6,
-                EGL_BLUE_SIZE, 5,
-                EGL_DEPTH_SIZE, 1,
-                EGL_NONE
-        };
-        EGLConfig configs[10];
-        EGLint numConfigs;
-        if (!eglChooseConfig(display, configAttribList, configs, 10, &numConfigs)) {
-            std::cout << "no config";
-            return;
-        } else {
-            std::cout << "yes config!";
-        }
-        EGLConfig config = configs[0];
-
-
-
-
-        // **********************
-        // *** Create surface ***
-        // **********************
-        EGLSurface window = eglCreateWindowSurface(display, config, nativeWindow, nullptr);
-
-        if (window == EGL_NO_SURFACE) {
-            std::cout << "no window";
-            return;
-        } else {
-            std::cout << "yes surface!";
-        }
-
-
-
-        // **********************
-        // *** Create context ***
-        // **********************
-        const EGLint contextAttribList[] = {
-                EGL_CONTEXT_CLIENT_VERSION, 2,
-                EGL_NONE
-        };
-        EGLContext context = eglCreateContext(display, config, EGL_NO_CONTEXT, contextAttribList);
-        if (context == EGL_NO_CONTEXT) {
-            std::cout << "no context";
-            return;
-        } else {
-            std::cout << "yes context!";
-        }
-
-        // **********************
-        // *** Make current ***
-        // **********************
-        if (!eglMakeCurrent(display, window, window, context)) {
-            std::cout << "can't make current";
-            return;
-        }
-
-
+    void triangle(GLsizei width, GLsizei height) {
         // **********************
         // *** Draw triangle ***
         // **********************
@@ -148,8 +74,6 @@ namespace CardGameRenderer {
         glUniform3f(glGetUniformLocation(program, "uColor"), 1.0, 0.0, 0.0);
         glEnableVertexAttribArray(0);
         glDrawArrays(GL_TRIANGLES, 0, 3);
-
-        eglSwapBuffers(display, window);
     }
 
     class CardGameRenderer {
