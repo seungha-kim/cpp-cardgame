@@ -56,8 +56,8 @@ add_library(CardGameRenderer
         CardGameRenderer.h)
 
 # TODO: install_name에 rpath 넣으려고 한 것. 꼭 이렇게 할 필요 없음. 어차피 이렇게 해도 bitcode 손상됨.
-#install(TARGETS CardGameRenderer
-#        DESTINATION _install)
+install(TARGETS CardGameRenderer
+        LIBRARY DESTINATION lib)
 
 if (PP_EMSCRIPTEN)
     add_subdirectory(web)
@@ -117,9 +117,3 @@ endif()
 #    target_link_options(cardgame
 #            PRIVATE "-Wl,-rpath,@executable_path")
 #endif()
-
-
-# emscripten 예시
-#cmake .. -DPP_FORCE_EMSCRIPTEN=1 -DCMAKE_TOOLCHAIN_FILE=~/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake
-#cmake --build .
-#python3 ../servewasm.py
