@@ -10,8 +10,11 @@ set(CMAKE_INSTALL_NAME_DIR "@rpath")
 # TODO: fat binary
 #set(CMAKE_IOS_INSTALL_COMBINED FALSE)
 
-
-if ((CMAKE_SYSTEM_NAME EQUAL "Darwin") OR (${PP_FORCE_MACOS}))
+# TODO: CMAKE_SYSTEM_NAME 만 가지고는 안되네..
+if (${PP_FORCE_EMSCRIPTEN})
+    set(PP_EMSCRIPTEN 1)
+    add_compile_definitions(PP_EMSCRIPTEN=1)
+elseif ((CMAKE_SYSTEM_NAME EQUAL "Darwin") OR (${PP_FORCE_MACOS}))
     set(PP_MACOS 1)
     add_compile_definitions(PP_MACOS=1)
 elseif ((CMAKE_SYSTEM_NAME EQUAL "iOS") OR (${PP_FORCE_IOS}))
@@ -41,18 +44,42 @@ endif()
 
 ### Targets
 
+if (PP_EMSCRIPTEN)
+    set(CARD_GAME_RENDERER_TYPE STATIC)
+else()
+    set(CARD_GAME_RENDERER_TYPE SHARED)
+endif()
+
 add_library(CardGameRenderer
-        SHARED
+        ${CARD_GAME_RENDERER_TYPE}
         CardGameRenderer.cpp
         CardGameRenderer.h)
 
-install(TARGETS CardGameRenderer
-        DESTINATION _install)
+# TODO: install_name에 rpath 넣으려고 한 것. 꼭 이렇게 할 필요 없음. 어차피 이렇게 해도 bitcode 손상됨.
+#install(TARGETS CardGameRenderer
+#        DESTINATION _install)
 
-add_executable(cardgame
-        main.cpp)
+if (PP_EMSCRIPTEN)
+    add_subdirectory(web)
+
+    add_executable(cardgame-web
+            web/web_main.cpp)
+
+    target_link_libraries(cardgame-web
+            WebGLContext)
+
+    target_link_libraries(cardgame-web
+            CardGameRenderer)
+
+    # TODO: GLESv2 링크가 안된거같다 https://stackoverflow.com/questions/50959871/generate-web-assembly-from-cmake-project-with-a-specified-html-output
+    set(CMAKE_EXECUTABLE_SUFFIX ".html")
+#    set_target_properties(cardgame-web PROPERTIES OUTPUT_NAME "cardgame-web.html")
+endif()
 
 if (PP_MACOS)
+    add_executable(cardgame
+            main.cpp)
+
     add_library(CardGameInitializer
             SHARED
             CardGameInitializer.cpp
@@ -90,3 +117,9 @@ endif()
 #    target_link_options(cardgame
 #            PRIVATE "-Wl,-rpath,@executable_path")
 #endif()
+
+
+# emscripten 예시
+#cmake .. -DPP_FORCE_EMSCRIPTEN=1 -DCMAKE_TOOLCHAIN_FILE=~/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake
+#cmake --build .
+#python3 ../servewasm.py
