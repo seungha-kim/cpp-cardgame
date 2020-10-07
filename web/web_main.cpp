@@ -10,5 +10,5 @@
 int main() {
     char id[] = "canvas";
     auto ctx = WebGLContext(id);
-    CardGameRenderer::triangle(100, 100);
+    CardGameRenderer::render(100, 100);
 }

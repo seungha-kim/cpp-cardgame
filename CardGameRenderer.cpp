@@ -23,7 +23,7 @@ namespace CardGameRenderer {
     const GLchar fragmentShaderSource[] =
             "precision mediump float;\n"
             "void main() {\n"
-            "   gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n"
+            "   gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);\n"
             "}\n";
 
     GLuint getShader(GLenum type, const GLchar *shaderSource) {
@@ -57,34 +57,35 @@ namespace CardGameRenderer {
         return program;
     }
 
-    void triangle(GLsizei width, GLsizei height) {
-        // **********************
-        // *** Draw triangle ***
-        // **********************
+    void render(GLsizei width, GLsizei height) {
+        glViewport(0, 0, width, height);
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         GLuint program = createProgram();
-
-        GLfloat vVertices[] = {0.0f, 0.5f, 0.0f,
-                               -0.5f, -0.5f, 0.0f,
-                               0.5f, -0.5f, 0.0f};
-        GLshort indicies[] = {0, 1, 2};
-        glViewport(0, 0, width, height);
         glClear(GL_COLOR_BUFFER_BIT);
         glUseProgram(program);
-        GLuint vboIds[2];
-        glGenBuffers(2, vboIds);
-        glBindBuffer(GL_ARRAY_BUFFER, vboIds[0]);
-        glBufferData(GL_ARRAY_BUFFER, 3 * 3 * sizeof(GLfloat), vVertices, GL_STATIC_DRAW);
-//
-//        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboIds[1]);
-//        glBufferData(GL_ELEMENT_ARRAY_BUFFER, 3 * sizeof(GLshort), indicies, GL_STATIC_DRAW);
 
-//        glBindBuffer(GL_ARRAY_BUFFER, 0); WebGL: INVALID_OPERATION: drawArrays: no buffer is bound to enabled attribute
-        glEnableVertexAttribArray(0);
+        GLfloat vVertices[] = {-0.5f, -0.5f, 0.0f,
+                               0.5f, -0.5f, 0.0f,
+                               0.5f, 0.5f, 0.0f,
+                               -0.5f, 0.5f, 0.0f};
+        GLushort indicies[] = {0, 1, 2,
+                              2, 3, 0};
+
+        GLuint vbo;
+        glGenBuffers(1, &vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, 4 * 3 * sizeof(GLfloat), vVertices, GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0); // TODO: ??
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 3, nullptr);
-//        glUniform3f(glGetUniformLocation(program, "uColor"), 1.0, 0.0, 0.0);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+
+        GLuint ebo;
+        glGenBuffers(1, &ebo);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, 3 * 3 * sizeof(GLushort), indicies, GL_STATIC_DRAW);
+
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, nullptr);
     }
+
 
     class CardGameRenderer {
 

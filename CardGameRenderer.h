@@ -12,7 +12,7 @@
 #endif
 
 namespace CardGameRenderer {
-    void triangle(GLsizei width, GLsizei height);
+    void render(GLsizei width, GLsizei height);
 };
 
 #endif //CARDGAME_CARDGAMERENDERER_H
