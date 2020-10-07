@@ -11,20 +11,33 @@
 #import <OpenGLES/ES2/gl.h>
 #endif
 
+const GLchar* vertexShaderSource = R"glsl(//precision mediump float;
+attribute vec3 aPosition; // 0
+attribute vec4 aColor; // 1
+
+varying vec4 vColor;
+
+void main() {
+    gl_Position = vec4(aPosition, 1.0);
+    vColor = aColor;
+})glsl";
+
+const unsigned int kIndexOfPos = 0;
+const unsigned int kOffsetOfPos = 0;
+const int kSizeOfPos = 3;
+
+const unsigned int kIndexOfColor = 1;
+const GLuint kOffsetOfColor = 3;
+const int kSizeOfColor = 4;
+const unsigned int kBytesOfAttribs = sizeof(GLfloat) * (kSizeOfPos + kSizeOfColor);
+
+const GLchar* fragmentShaderSource = R"glsl(precision mediump float;
+varying lowp vec4 vColor;
+void main() {
+   gl_FragColor = vColor;
+})glsl";
 
 namespace CardGameRenderer {
-
-    const GLchar vertexShaderSource[] =
-            "attribute vec3 aPosition;\n"
-            "void main() {\n"
-            "    gl_Position = vec4(aPosition, 1.0);\n"
-            "}\n";
-
-    const GLchar fragmentShaderSource[] =
-            "precision mediump float;\n"
-            "void main() {\n"
-            "   gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);\n"
-            "}\n";
 
     GLuint getShader(GLenum type, const GLchar *shaderSource) {
         GLuint shader;
@@ -60,32 +73,52 @@ namespace CardGameRenderer {
     void render(GLsizei width, GLsizei height) {
         glViewport(0, 0, width, height);
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        // TODO: move this
         GLuint program = createProgram();
         glClear(GL_COLOR_BUFFER_BIT);
         glUseProgram(program);
 
-        GLfloat vVertices[] = {-0.5f, -0.5f, 0.0f,
-                               0.5f, -0.5f, 0.0f,
-                               0.5f, 0.5f, 0.0f,
-                               -0.5f, 0.5f, 0.0f};
+        GLfloat vVertices[] = {
+                -0.5f, -0.5f, 0.0f, // coord
+                1.0f, 0.0f, 0.0f, 1.0f, // color
+
+                0.5f, -0.5f, 0.0f,
+                0.0f, 1.0f, 0.0f, 1.0f,
+
+                0.5f, 0.5f, 0.0f,
+                0.0f, 0.0f, 1.0f, 1.0f,
+
+                -0.5f, 0.5f, 0.0f,
+                1.0f, 1.0f, 0.0f, 1.0f};
+        const int numOfVertices = 4;
+
+
         GLushort indicies[] = {0, 1, 2,
-                              2, 3, 0};
+                              0, 2, 3};
+
 
         GLuint vbo;
         glGenBuffers(1, &vbo);
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, 4 * 3 * sizeof(GLfloat), vVertices, GL_STATIC_DRAW);
-        glEnableVertexAttribArray(0); // TODO: ??
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 3, nullptr);
+        glBufferData(GL_ARRAY_BUFFER, numOfVertices * kBytesOfAttribs, vVertices, GL_STATIC_DRAW);
+
+        glEnableVertexAttribArray(kIndexOfPos);
+        glVertexAttribPointer(kIndexOfPos, kSizeOfPos, GL_FLOAT, GL_FALSE, kBytesOfAttribs, nullptr);
+        glBindAttribLocation(program, kIndexOfPos, "aPosition");
+
+        glEnableVertexAttribArray(kIndexOfColor); // glVertexAttribXXX() 로 주어진 상수 대신 vertex array (or buffer)를 사용하겠다는 의미
+        glVertexAttribPointer(kIndexOfColor, kSizeOfColor, GL_FLOAT, GL_FALSE, kBytesOfAttribs, (const void*) (sizeof(GLfloat) * kOffsetOfColor));
+//        glVertexAttrib4f(kIndexOfColor, 1.0f, 1.0f, 0.0f, 1.0f);
+        glBindAttribLocation(program, kIndexOfColor, "aColor");
 
         GLuint ebo;
         glGenBuffers(1, &ebo);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, 3 * 3 * sizeof(GLushort), indicies, GL_STATIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(GLushort), indicies, GL_STATIC_DRAW);
 
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, nullptr);
+        // TODO: glDeleteBuffers()
     }
-
 
     class CardGameRenderer {
 
