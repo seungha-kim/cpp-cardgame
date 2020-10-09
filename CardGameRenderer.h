@@ -23,7 +23,9 @@ namespace CardGame {
         GLuint ebo{};
         GLuint vertexShader;
         GLuint fragmentShader;
+        GLuint texture;
         GLuint getShader(GLenum type, const GLchar *shaderSource);
+        void initTexture();
     };
 };
 
