@@ -11,8 +11,20 @@
 #import <OpenGLES/ES2/gl.h>
 #endif
 
-namespace CardGameRenderer {
-    void render(GLsizei width, GLsizei height);
+namespace CardGame {
+    class Renderer {
+    public:
+        Renderer(GLsizei width, GLsizei height);
+        ~Renderer();
+        void render();
+    private:
+        GLuint program;
+        GLuint vbo{};
+        GLuint ebo{};
+        GLuint vertexShader;
+        GLuint fragmentShader;
+        GLuint getShader(GLenum type, const GLchar *shaderSource);
+    };
 };
 
 #endif //CARDGAME_CARDGAMERENDERER_H
