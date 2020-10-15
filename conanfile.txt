@@ -1,0 +1,9 @@
+[requires]
+skia/20201016@xid/stable
+
+[generators]
+cmake
+
+[options]
+
+[imports]

@@ -3,10 +3,10 @@
 
 #ifndef CARDGAME_WEBGLCONTEXT_H
 #define CARDGAME_WEBGLCONTEXT_H
-#if PP_MACOS || PP_EMSCRIPTEN
-#include <GLES2/gl2.h>
+
+#include "../gl2.h"
 #include "html5.h"
-#endif
+
 
 class WebGLContext {
 public:
@@ -14,7 +14,7 @@ public:
 
     ~WebGLContext (void);
 
-    void run (uint8_t* buffer);
+//    void run (uint8_t* buffer);
 
 private:
     GLuint programObject;

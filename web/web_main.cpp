@@ -4,7 +4,7 @@
 
 // https://github.com/DanRuta/webassembly-webgl-shaders
 
-#include "WebGLContext.h"
+#include "./WebGLContext.h"
 #include "../CardGameRenderer.h"
 
 int main() {

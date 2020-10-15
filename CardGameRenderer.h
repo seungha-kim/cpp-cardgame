@@ -5,10 +5,12 @@
 #ifndef CARDGAME_CARDGAMERENDERER_H
 #define CARDGAME_CARDGAMERENDERER_H
 
-#if PP_MACOS || PP_EMSCRIPTEN
+#if PP_MACOS
 #include <GLES2/gl2.h>
 #elif PP_IOS
 #import <OpenGLES/ES2/gl.h>
+#elif PP_EMSCRIPTEN
+#include "gl2.h"
 #endif
 
 namespace CardGame {

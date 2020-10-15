@@ -4,11 +4,21 @@
 
 #include "CardGameRenderer.h"
 #include <iostream>
-
-#if PP_MACOS || PP_EMSCRIPTEN
+#include "include/core/SkCanvas.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkSurface.h"
+#include "include/core/SkData.h"
+#include "include/gpu/GrBackendSurface.h"
+#include "include/gpu/GrDirectContext.h"
+#include "include/gpu/GrRecordingContext.h"
+#include "include/gpu/gl/GrGLInterface.h"
+#if PP_MACOS
 #include <GLES2/gl2.h>
 #elif PP_IOS
 #import <OpenGLES/ES2/gl.h>
+#elif PP_EMSCRIPTEN
+#include "./gl2.h"
+
 #endif
 
 const GLchar* vertexShaderSource = R"glsl(//precision mediump float;
@@ -49,6 +59,24 @@ struct Pixel {
 };
 
 namespace CardGame {
+    void drawStar(SkCanvas* canvas) {
+        const SkScalar scale = 128.0f;
+        const SkScalar R = 0.45f * scale;
+        const SkScalar TAU = 6.2831853f;
+        SkPath path;
+        path.moveTo(R, 0.0f);
+        for (int i = 1; i < 7; ++i) {
+            SkScalar theta = 3 * i * TAU / 7;
+            path.lineTo(R * cos(theta), R * sin(theta));
+        }
+        path.close();
+        SkPaint p;
+        p.setAntiAlias(true);
+        canvas->clear(SK_ColorWHITE);
+        canvas->translate(0.5f * scale, 0.5f * scale);
+        canvas->drawPath(path, p);
+    }
+
     GLuint Renderer::getShader(GLenum type, const GLchar *shaderSource) {
         GLuint shader;
         GLint compiled;
@@ -101,17 +129,50 @@ namespace CardGame {
     }
 
     void Renderer::initTexture() {
-        Pixel pixels[] = {
-                Pixel{255, 0, 0},
-                Pixel{0, 255, 0},
-                Pixel{0, 0, 255},
-                Pixel{255, 255, 0},
-        };
+        // TODO: GPU surface 시도해보기
+//        https://stackoverflow.com/questions/56238188/skia-rendering-text-to-opengl-texture
+//https://github.com/google/skia/blob/master/site/user/api/skcanvas_creation.md#gpu
+//        const GrGLInterface* interface = nullptr;
+// https://github.com/google/skia/blob/master/samplecode/SampleTextureUpload.cpp
+        auto canvas = SkCanvas();
+        SkImageInfo info = SkImageInfo::MakeN32Premul(128, 128);
+
+        sk_sp<SkSurface> rasterSurface = SkSurface::MakeRasterN32Premul(128, 128);
+        SkCanvas* rasterCanvas = rasterSurface->getCanvas();
+        drawStar(rasterCanvas);
+        auto pixmap = new SkPixmap();
+        rasterSurface->peekPixels(pixmap);
+        std::cout << pixmap->rowBytes() << " & " << pixmap->dimensions().fHeight << " & " << pixmap->dimensions().fWidth << std::endl;
+
+//        auto direct = GrAsDirectContext(canvas.recordingContext()); // -> null
+        std::cout << "hmm..." << std::endl;
+//        SkBitmap* bitmap;
+//        img->asLegacyBitmap(bitmap)
+//        rasterSurface->flush(SkSurface::BackendSurfaceAccess::kPresent, GrFlushInfo());
+//        auto textureHandle = rasterSurface->getBackendTexture(SkSurface::kFlushRead_BackendHandleAccess);
+//        std::cout << textureHandle.isValid() << std::endl;
+
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         glGenTextures(1, &texture);
 
         glBindTexture(GL_TEXTURE_2D, texture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 2, 2, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+
+//        Pixel pixels[] = {
+//                Pixel{255, 0, 0},
+//                Pixel{0, 255, 0},
+//                Pixel{0, 0, 255},
+//                Pixel{255, 255, 0},
+//        };
+//
+//        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 2, 2, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+        SkColor4f colors[16384];
+        for (int i = 0; i < 128; i++) {
+            for (int j = 0; j < 128; j++) {
+                colors[128 * i + j] = SkColor4f::FromColor(pixmap->getColor(i, j));
+            }
+        }
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 128, 128, 0, GL_RGBA, GL_FLOAT, colors);
         // TODO: glTexParameter?
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);

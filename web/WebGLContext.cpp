@@ -14,6 +14,8 @@ WebGLContext::WebGLContext(char * id) {
 
     context = emscripten_webgl_create_context(id, &attrs);
     emscripten_webgl_make_context_current(context);
+    emscripten_webgl_enable_extension(context, "OES_texture_float");
+    emscripten_webgl_enable_extension(context, "OES_texture_float_linear");
 }
 
 WebGLContext::~WebGLContext (void) {

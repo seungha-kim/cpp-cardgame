@@ -10,10 +10,13 @@ set(CMAKE_INSTALL_NAME_DIR "@rpath")
 # TODO: fat binary
 #set(CMAKE_IOS_INSTALL_COMBINED FALSE)
 
+# TODO: Detected a mismatch for the compiler version between your conan profile settings and CMake
+set(CONAN_DISABLE_CHECK_COMPILER 1)
+
 # TODO: CMAKE_SYSTEM_NAME 만 가지고는 안되네..
 if (${PP_FORCE_EMSCRIPTEN})
     set(PP_EMSCRIPTEN 1)
-    add_compile_definitions(PP_EMSCRIPTEN=1)
+    add_compile_definitions(PP_EMSCRIPTEN=1 SK_GL=1 SK_SUPPORT_GPU=1)
 elseif ((CMAKE_SYSTEM_NAME EQUAL "Darwin") OR (${PP_FORCE_MACOS}))
     set(PP_MACOS 1)
     add_compile_definitions(PP_MACOS=1)
@@ -32,6 +35,18 @@ if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
             TLS_VERIFY ON)
 endif()
 include(${CMAKE_BINARY_DIR}/conan.cmake)
+
+if (PP_EMSCRIPTEN)
+    conan_cmake_run(
+            CONANFILE conanfile.txt
+            BASIC_SETUP CMAKE_TARGETS
+            SETTINGS os=Emscripten
+            SETTINGS arch=wasm
+            SETTINGS compiler=clang
+            SETTINGS compiler.version=9
+            SETTINGS compiler.libcxx=libc++
+            BUILD missing)
+endif()
 
 if (PP_MACOS)
     # TODO: 경우에 따라 패키지 선택적으로 설치
@@ -55,6 +70,12 @@ add_library(CardGameRenderer
         CardGameRenderer.cpp
         CardGameRenderer.h)
 
+target_link_libraries(CardGameRenderer
+        PRIVATE CONAN_PKG::skia)
+
+target_include_directories(CardGameRenderer
+        PUBLIC ${CONAN_INCLUDE_DIRS})
+
 # TODO: install_name에 rpath 넣으려고 한 것. 꼭 이렇게 할 필요 없음. 어차피 이렇게 해도 bitcode 손상됨.
 install(TARGETS CardGameRenderer
         LIBRARY DESTINATION lib)
@@ -70,6 +91,7 @@ if (PP_EMSCRIPTEN)
 
     target_link_libraries(cardgame-web
             CardGameRenderer)
+
 
     # TODO: GLESv2 링크가 안된거같다 https://stackoverflow.com/questions/50959871/generate-web-assembly-from-cmake-project-with-a-specified-html-output
     set(CMAKE_EXECUTABLE_SUFFIX ".html")
@@ -91,15 +113,15 @@ if (PP_MACOS)
     target_include_directories(CardGameRenderer
             PRIVATE ${CONAN_INCLUDE_DIRS})
 
-    target_link_libraries(CardGameInitializer
-            PRIVATE CONAN_PKG::angle)
+#    target_link_libraries(CardGameInitializer
+#            PRIVATE CONAN_PKG::angle)
 
     target_include_directories(CardGameInitializer
             PRIVATE ${CONAN_INCLUDE_DIRS})
 
     # TODO: Qt instead of glfw (glfw가 ANGLE 지원하지 않음)
-    target_link_libraries(cardgame
-            CONAN_PKG::glfw)
+#    target_link_libraries(cardgame
+#            CONAN_PKG::glfw)
 
     target_include_directories(cardgame
             PRIVATE ${CONAN_INCLUDE_DIRS})
